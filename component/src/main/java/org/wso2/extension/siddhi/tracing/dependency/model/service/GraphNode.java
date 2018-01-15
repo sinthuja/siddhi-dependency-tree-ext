@@ -24,10 +24,12 @@ package org.wso2.extension.siddhi.tracing.dependency.model.service;
 public class GraphNode {
     private int id;
     private String label;
+    private String title;
 
-    public GraphNode(int id, String label) {
+    public GraphNode(int id, String label, String title) {
         this.id = id;
         this.label = label;
+        this.title = title;
     }
 
     public int getId() {
@@ -36,5 +38,9 @@ public class GraphNode {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }

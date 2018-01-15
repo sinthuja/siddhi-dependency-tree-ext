@@ -48,7 +48,7 @@ public class DependencyModelService {
         int nodeId = 0;
         while (nodeSet.hasNext()) {
             Node node = nodeSet.next();
-            GraphNode graphNode = new GraphNode(++nodeId, node.getName());
+            GraphNode graphNode = new GraphNode(++nodeId, node.getName(), node.getTags());
             graphNodes.add(graphNode);
             graphNodeIdCache.put(graphNode.getLabel(), graphNode.getId());
         }
