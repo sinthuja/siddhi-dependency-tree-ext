@@ -1,0 +1,34 @@
+@App:name("TracingTest")
+
+@App:description('Receive the analytics trace events')
+
+@source(type='wso2event', @map(type='wso2event'))
+define stream SpanStream (componentName string, traceId string, spanId long, baggageItems string, parentId long, serviceName string, stratTime long, endTime long, tags string, references string);
+
+@sink(type='log')
+define stream GroupedSpanStream (componentName string, traceId string, spanId long, baggageItems string, parentId long, serviceName string, duration long, tags string, references string);
+
+@PrimaryKey('traceId', 'spanId')
+define table SpanTable (componentName string, traceId string, spanId long, baggageItems string, parentId long, serviceName string, duration long, tags string, references string);
+
+from SpanStream
+select componentName, traceId, spanId, baggageItems, parentId, serviceName, endTime - stratTime as duration, tags, references
+insert into SpanTable;
+
+from SpanStream[parentId == 0]
+select *
+insert into CompletedTraceStream;
+
+from CompletedTraceStream join SpanTable on SpanTable.traceId == CompletedTraceStream.traceId
+select SpanTable.componentName, SpanTable.traceId, SpanTable.spanId, SpanTable.baggageItems, SpanTable.parentId, SpanTable.serviceName,
+SpanTable.duration, SpanTable.tags, SpanTable.references
+order by SpanTable.spanId
+insert into GroupedSpanStream;
+
+from GroupedSpanStream#tracing:dependencyTree(componentName, spanId, parentId, serviceName, tags, references)
+select *
+insert into ProcessedGroupedSpanStream;
+
+from ProcessedGroupedSpanStream
+delete SpanTable on SpanTable.traceId == traceId;
+
